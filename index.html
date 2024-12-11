@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Compass</title>
+    <style>
+      body {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        align-items: center;
+        justify-content: center;
+      }
+      .compass {
+        position: relative;
+        width: 320px;
+        height: 320px;
+        border-radius: 50%;
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+        margin: 20px;
+      }
+      .compass > .compass-circle {
+        position: absolute;
+        width: 90%;
+        height: 90%;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        transition: transform 0.1s ease-out;
+        background: url(https://purepng.com/public/uploads/large/purepng.com-compasscompassinstrumentnavigationcardinal-directionspointsdiagram-1701527842316onq7x.png)
+          center no-repeat;
+        background-size: contain;
+      }
+      .direction {
+        font-size: 24px;
+        font-weight: bold;
+        margin: 10px;
+      }
+      .start-btn {
+        margin-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="compass">
+      <div class="compass-circle"></div>
+    </div>
+    <div class="direction">Direction: 0°</div>
+    <button class="start-btn">Start compass</button>
+    <script>
+      const compassCircle = document.querySelector(".compass-circle");
+      const directionText = document.querySelector(".direction");
+      const startBtn = document.querySelector(".start-btn");
+      let isCompassRunning = false;
+      let lastCompassValue = 0;
+      const isIOS =
+        navigator.userAgent.match(/(iPod|iPhone|iPad)/) &&
+        navigator.userAgent.match(/AppleWebKit/);
+      function toggleCompass() {
+        if (isCompassRunning) {
+          stopCompass();
+        } else {
+          startCompass();
+        }
+      }
+      function startCompass() {
+        isCompassRunning = true;
+        startBtn.textContent = "Stop compass";
+        if (isIOS) {
+          DeviceOrientationEvent.requestPermission()
+            .then((response) => {
+              if (response === "granted") {
+                window.addEventListener("deviceorientation", handleOrientation, true);
+              } else {
+                alert("Permission denied!");
+                stopCompass();
+              }
+            })
+            .catch(() => alert("Not supported"));
+        } else {
+          window.addEventListener("deviceorientationabsolute", handleOrientation, true);
+        }
+      }
+      function stopCompass() {
+        isCompassRunning = false;
+        startBtn.textContent = "Start compass";
+        window.removeEventListener("deviceorientationabsolute", handleOrientation, true);
+        window.removeEventListener("deviceorientation", handleOrientation, true);
+      }
+      function handleOrientation(event) {
+        if (!isCompassRunning) return;
+        const compass = event.webkitCompassHeading || Math.abs(event.alpha - 360);
+        compassCircle.style.transform = `translate(-50%, -50%) rotate(${-compass}deg)`;
+        lastCompassValue = Math.round(compass);
+        directionText.textContent = `Direction: ${lastCompassValue}°`;
+      }
+      startBtn.addEventListener("click", toggleCompass);
+    </script>
+  </body>
+</html>
